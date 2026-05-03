@@ -20,11 +20,8 @@ local_tz = pytz.timezone("Europe/Berlin")
 utc_tz = pytz.utc
 
 
-def fetch_latest_level(date_str):
-    url = DATA_URL_TEMPLATE.format(date_str)
-    rsp = requests.get(url, timeout=30)
-    rsp.raise_for_status()
-    data = rsp.text.split("\n")[12:-1]
+def parse_response(text):
+    data = text.split("\n")[12:-1]
     data = [row.replace("\r", "") for row in data]
     rows = [(row.split("#")[0], row.split("#")[1]) for row in data if "#" in row]
     valid = [r for r in rows if not re.search("X", r[1])]
@@ -32,6 +29,13 @@ def fetch_latest_level(date_str):
         return None, None
     time_str, level_str = valid[-1]
     return time_str, int(level_str)
+
+
+def fetch_latest_level(date_str):
+    url = DATA_URL_TEMPLATE.format(date_str)
+    rsp = requests.get(url, timeout=30)
+    rsp.raise_for_status()
+    return parse_response(rsp.text)
 
 
 def parse_threshold(env_var):
